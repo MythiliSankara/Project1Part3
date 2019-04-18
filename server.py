@@ -21,16 +21,6 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 
 
-# XXX: The Database URI should be in the format of: 
-#
-#     postgresql://USER:PASSWORD@<IP_OF_POSTGRE_SQL_SERVER>/<DB_NAME>
-#
-# For example, if you had username ewu2493, password foobar, then the following line would be:
-#
-#     DATABASEURI = "postgresql://ewu2493:foobar@<IP_OF_POSTGRE_SQL_SERVER>/postgres"
-#
-# For your convenience, we already set it to the class database
-
 # Use the DB credentials you received by e-mail
 DB_USER = "ns3305"
 DB_PASSWORD = "J85pu9FmC6"
@@ -111,7 +101,7 @@ def home():
   # context = dict(tribes=tribes)
   #return render_template("home.html", **context)
 
-  sql_string_image = text("""SELECT artlink,art_name from artwork ;""")
+  sql_string_image = text("""SELECT artlink,art_name,artwork_id from artwork;""")
   cursor = g.conn.execute(sql_string_image)
   tribe_art = process_results(cursor)
   cursor.close()
@@ -120,7 +110,7 @@ def home():
 
 
 # The artist page
-
+#select user_id, name from art_user where user_id in (select user_id from artwork where artwork_id='ARW1005');
 @app.route('/artists')
 def artists():
   sql_string = text("""SELECT user_id, name from artist;""")
@@ -177,14 +167,43 @@ def tribe(tribe_id=None):
 
 @app.route('/buyers')
 def buyers():
-  print("Anything")
-  sql_string = text("""SELECT b.name from "User" b, "User" s, artwork a, transaction_history t, buyer_has bh where b.user_id=bh.user_id and s.user_id=a.user_id and t.trans_id=bh.trans_id and t.artwork_id=a.artwork_id;""")
+  sql_string = text("""SELECT b.user_id,b.name from art_user b, art_user s, artwork a, transaction_history t, buyer_has bh where b.user_id=bh.user_id and s.user_id=a.user_id and t.trans_id=bh.trans_id and t.artwork_id=a.artwork_id;""")
   cursor = g.conn.execute(sql_string)
   buyers = process_results(cursor)
   cursor.close()
-  print(buyers)
   context = dict(buyers=buyers)
   return render_template("buyers.html", **context)
+
+@app.route('/buyer/<user_id>')
+def buyer(user_id=None):
+  print("below should be the user_id")
+  user_id = str(user_id)
+  print(user_id)
+  sql_buy = text("""SELECT u.name,a.art_name,b.date_of_purchase,b.total_amount from art_user u,artwork a,buyer_has b,transaction_history t where u.user_id=b.user_id and b.trans_id=t.trans_id and t.artwork_id=a.artwork_id and u.user_id=:user_id""")
+  cursor = g.conn.execute(sql_buy, user_id=user_id)
+  buyer_details = process_results(cursor)
+  cursor.close()
+  print(buyer_details)
+  context = dict(buyer_details=buyer_details)
+  return render_template("buyer.html", **context)
+
+
+@app.route('/transaction')
+def transaction():
+  print("check this out")
+  sql_string = text("""SELECT b.trans_id,u.name,a.art_name,t.date_of_purchase,t.total_no_of_items,t.total_amount from art_user u,buyer_has b,transaction_history t,artwork a where u.user_id=b.user_id 
+and b.trans_id=t.trans_id and t.artwork_id=a.artwork_id;""")
+  cursor = g.conn.execute(sql_string)
+  transaction_details = process_results(cursor)
+  cursor.close()
+  context = dict(transaction_details=transaction_details)
+  return render_template("transaction.html", **context) 
+
+
+
+
+
+
 
 
 
@@ -199,79 +218,6 @@ def process_results(cursor):
 
   return values
 
-
-
-  #
-  # example of a database query
-  #
-  # cursor = g.conn.execute("SELECT name FROM test")
-  # names = []
-  # for result in cursor:
-  #   names.append(result['name'])  # can also be accessed using result[0]
-  # cursor.close()
-
-  #
-  # Flask uses Jinja templates, which is an extension to HTML where you can
-  # pass data to a template and dynamically generate HTML based on the data
-  # (you can think of it as simple PHP)
-  # documentation: https://realpython.com/blog/python/primer-on-jinja-templating/
-  #
-  # You can see an example template in templates/index.html
-  #
-  # context are the variables that are passed to the template.
-  # for example, "data" key in the context variable defined below will be 
-  # accessible as a variable in index.html:
-  #
-  #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-  #     <div>{{data}}</div>
-  #     
-  #     # creates a <div> tag for each element in data
-  #     # will print: 
-  #     #
-  #     #   <div>grace hopper</div>
-  #     #   <div>alan turing</div>
-  #     #   <div>ada lovelace</div>
-  #     #
-  #     {% for n in data %}
-  #     <div>{{n}}</div>
-  #     {% endfor %}
-  #
-  # context = dict(data = names)
-
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
-  # return render_template("index.html", **context)
-
-#
-# This is an example of a different path.  You can see it at
-# 
-#     localhost:8111/another
-#
-# notice that the functio name is another() rather than index()
-# the functions for each app.route needs to have different names
-#
-# @app.route('/another')
-# def another():
-#   return render_template("anotherfile.html")
-
-
-# # Example of adding new data to the database
-# @app.route('/add', methods=['POST'])
-# def add():
-#   name = request.form['name']
-#   print name
-#   cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)';
-#   g.conn.execute(text(cmd), name1 = name, name2 = name);
-#   return redirect('/')
-
-
-# @app.route('/login')
-# def login():
-#     abort(401)
-#     this_is_never_executed()
 
 
 if __name__ == "__main__":

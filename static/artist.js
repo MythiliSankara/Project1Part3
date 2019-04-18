@@ -2,7 +2,6 @@ var callOnLoad = function() {
     console.log(artist)
     $.each(artist,function(index,single_artist){
         var name_div="<div>Name: "+single_artist['name']+"\nMobile no.: "+single_artist['mobile_no']+"\nEmail id: "+single_artist['email_id']+"</div>"
-        
         $("#placeholder").append(name_div)
     })
     // $.each(artist, function(index, artist){

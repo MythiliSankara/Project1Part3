@@ -4,7 +4,7 @@ var callOnLoad = function() {
     var column_div = "<div class='col-md-12'>"
     var table_div = "<table class='table'><thead><tr><th scope='col'>Artwork</th></tr></thead><tbody>"
     $.each(tribe_art, function(index, tribe){
-        var tr_tag = "<tr><th scope='row'><div><a href='/artwork/"+tribe["art_name"]+"'</a>"+tribe["art_name"]+"</div></th></tr>"
+        var tr_tag = "<tr><th scope='row'><div><a href='/artwork/"+tribe["artwork_id"]+"'</a>"+tribe["art_name"]+"</div></th></tr>"
         // var link = "<div><a href='/artwork/"+tribe["artwork_id"]+"'</a>"+tribe["artwork_id"]+"</div>"
         // var name_tag = "<td>"+link+"</td>"
         //var tr_end = "</tr>"
